@@ -128,9 +128,10 @@ class _AnganWadiScreeningFormSevenState
     }
   }
 
-  Widget _buildDiseaseSummary(Map<String, dynamic> data) {
-    // Get the detected diseases array
-    List<dynamic> allDetectedDiseases = data['allDetectedDiseases'] ?? [];
+  /// Build disease summary from allDetectedDiseases array
+  Widget _buildDiseaseSummary() {
+    List<dynamic> allDetectedDiseases =
+        widget.combinedData['allDetectedDiseases'] ?? [];
 
     if (allDetectedDiseases.isEmpty) {
       return const Center(
@@ -144,148 +145,55 @@ class _AnganWadiScreeningFormSevenState
       );
     }
 
-    // Group diseases by category for better display
-    Map<int, List<Map<String, dynamic>>> groupedDiseases = {};
-    for (var disease in allDetectedDiseases) {
-      int categoryId = disease['categoryId'] ?? 0;
-      if (!groupedDiseases.containsKey(categoryId)) {
-        groupedDiseases[categoryId] = [];
-      }
-      groupedDiseases[categoryId]!.add(disease);
-    }
+    return ListView.builder(
+      itemCount: allDetectedDiseases.length,
+      itemBuilder: (context, index) {
+        final disease = allDetectedDiseases[index];
+        final diseaseName = disease['diseaseName'] ?? 'Unknown';
+        final isTreated = disease['treated'] ?? false;
+        final isReferred = disease['referred'] ?? false;
+        final notes = disease['note'] ?? '';
+        final hospitalName = disease['hospitalName'] ?? '';
 
-    // Category names mapping
-    Map<int, String> categoryNames = {
-      1: 'A. Defects at Birth',
-      2: 'B. Deficiencies at Birth',
-      3: 'C. Diseases',
-      4: 'D. Developmental Delay Including Disability',
-      5: 'E. Adolescent Specific Questionnaire',
-      6: 'F. Disability',
-    };
-
-    List<Widget> allWidgets = [];
-    int diseaseCounter = 1;
-
-    // Sort by category ID
-    var sortedCategories = groupedDiseases.keys.toList()..sort();
-
-    for (int categoryId in sortedCategories) {
-      List<Map<String, dynamic>> diseases = groupedDiseases[categoryId]!;
-
-      // Add category header
-      allWidgets.add(
-        Container(
-          width: double.infinity,
-          color: Colors.grey[200],
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Text(
-            categoryNames[categoryId] ?? 'Category $categoryId',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
-      );
-
-      // Add diseases in this category
-      for (var disease in diseases) {
-        int diseaseId = disease['diseaseId'];
-        String diseaseName = disease['diseaseName'] ?? 'Unknown';
-        bool treated = disease['treated'] ?? false;
-        bool referred = disease['referred'] ?? false;
-        String hospitalName = disease['hospitalName'] ?? '';
-        String note = disease['note'] ?? '';
-
-        allWidgets.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$diseaseCounter. $diseaseName',
+                  '${index + 1}. $diseaseName',
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    // Treated checkbox
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          disease['treated'] = !treated;
-                          if (disease['treated']) {
-                            disease['referred'] = false;
-                          }
-                        });
-                      },
-                      child: Row(
-                        children: [
-                          const Text(
-                            'Treated  ',
-                            style: TextStyle(fontSize: 15),
-                          ),
-                          Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.grey[400]!,
-                                width: 2,
-                              ),
-                              color: Colors.white,
-                            ),
-                            child: treated
-                                ? const Icon(
-                                    Icons.check,
-                                    size: 18,
-                                    color: Colors.blue,
-                                  )
-                                : null,
-                          ),
-                        ],
+                    Icon(
+                      isTreated ? Icons.check_circle : Icons.local_hospital,
+                      color: isTreated ? Colors.green : Colors.orange,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isTreated
+                          ? 'Treated'
+                          : isReferred
+                          ? 'Referred'
+                          : 'Pending',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: isTreated ? Colors.green : Colors.orange,
                       ),
                     ),
-                    const SizedBox(width: 24),
-                    // Refer checkbox
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          disease['referred'] = !referred;
-                          if (disease['referred']) {
-                            disease['treated'] = false;
-                          }
-                        });
-                      },
-                      child: Row(
-                        children: [
-                          const Text('Refer  ', style: TextStyle(fontSize: 15)),
-                          Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.grey[400]!,
-                                width: 2,
-                              ),
-                              color: Colors.white,
-                            ),
-                            child: referred
-                                ? const Icon(
-                                    Icons.check,
-                                    size: 18,
-                                    color: Colors.blue,
-                                  )
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Hospital name
-                    if (referred && hospitalName.isNotEmpty)
+                    if (isReferred && hospitalName.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      const Text('→', style: TextStyle(fontSize: 15)),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           hospitalName,
@@ -295,47 +203,42 @@ class _AnganWadiScreeningFormSevenState
                           ),
                         ),
                       ),
+                    ],
                   ],
                 ),
-                const SizedBox(height: 12),
-                // Note field
-                if (treated || referred)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        treated ? 'Enter Treated Note' : 'Enter Refer Note',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.green, width: 2),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: TextField(
-                          controller: TextEditingController(text: note),
-                          onChanged: (value) {
-                            disease['note'] = value;
-                          },
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.all(12),
+                if (notes.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Notes:',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[700],
                           ),
-                          maxLines: 2,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(notes, style: const TextStyle(fontSize: 14)),
+                      ],
+                    ),
                   ),
+                ],
               ],
             ),
           ),
         );
-        diseaseCounter++;
-      }
-    }
-
-    return ListView(children: allWidgets);
+      },
+    );
   }
 
   Future<void> _submitForm() async {
@@ -410,21 +313,36 @@ class _AnganWadiScreeningFormSevenState
             bool referred = disease['referred'] ?? false;
             String note = disease['note'] ?? '';
 
-            ReferralRequest? referral;
+            // ✅ ALWAYS create referral - backend requires it
+            ReferralRequest referral;
 
             if (referred && disease['hospitalId'] != null) {
+              // User selected referral with hospital
               referral = ReferralRequest(
                 hospitalId: disease['hospitalId'],
                 referralDate: DateTime.now(),
-                referralNotes: note.isNotEmpty ? note : null,
-                treatmentDate: DateTime.now(),
-                treatmentNotes: treated ? note : null,
+                referralNotes: note.isNotEmpty ? note : "Pending referral",
+                treatmentDate: null, // Not treated yet
+                treatmentNotes: null,
                 referralDiseases: [
                   ReferralDiseaseRequest(diseaseId: diseaseId),
                 ],
               );
             } else {
-              referral = null; // ✅ BACKEND ALLOWS NULL
+              // ✅ Default referral (for treated cases or no referral selected)
+              final now = DateTime.now();
+              referral = ReferralRequest(
+                hospitalId: 1, // Default hospital ID
+                referralDate: now,
+                referralNotes: treated
+                    ? "Treated at screening - no external referral needed"
+                    : "Pending referral",
+                treatmentDate: treated ? now : null,
+                treatmentNotes: treated && note.isNotEmpty ? note : "",
+                referralDiseases: [
+                  ReferralDiseaseRequest(diseaseId: diseaseId),
+                ],
+              );
             }
 
             return DetectedDiseaseRequest(
@@ -432,7 +350,7 @@ class _AnganWadiScreeningFormSevenState
               treatedAtScreening: treated,
               detectionNotes: note.isNotEmpty ? note : "",
               treatmentNotes: treated && note.isNotEmpty ? note : "",
-              referral: referral,
+              referral: referral, // ✅ Never null
             );
           })
           .toList();
@@ -721,9 +639,22 @@ class _AnganWadiScreeningFormSevenState
           ),
 
           const Divider(),
-
+          // Add this BEFORE Expanded(child: _buildDiseaseSummary())
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              children: [
+                const Icon(Icons.medical_services, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text(
+                  'Detected Diseases',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
           // Disease summary (expanded list)
-          Expanded(child: _buildDiseaseSummary(widget.combinedData)),
+          Expanded(child: _buildDiseaseSummary()),
 
           // Submit button
           Padding(

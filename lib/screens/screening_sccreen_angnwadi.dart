@@ -1055,7 +1055,7 @@ class _ScreenningSchoolScreenState extends State<ScreenningAngnwadiScreen> {
             elevation: 0,
           ),
           child: const Text(
-            'Start Screening',
+            'Add Student',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),

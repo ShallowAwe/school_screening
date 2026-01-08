@@ -58,13 +58,15 @@ class _AddSchoolScreenState extends State<AddSchoolScreen> {
   String baseUrl = ApiConfig.baseUrl;
   String? _latitude;
   String? _longitude;
-  //Date Selection
+  // Date Selection - FUTURE ONLY
   Future<void> _selectDate(BuildContext context) async {
+    final DateTime now = DateTime.now();
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      initialDate: now.add(const Duration(days: 1)), // start from tomorrow
+      firstDate: now, // today allowed
+      lastDate: now.add(const Duration(days: 365 * 5)), // 5 years into future
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -74,12 +76,13 @@ class _AddSchoolScreenState extends State<AddSchoolScreen> {
               surface: Colors.white,
               onSurface: Colors.blue[800]!,
             ),
-            dialogTheme: DialogThemeData(backgroundColor: Colors.white),
+            dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
       },
     );
+
     if (picked != null && picked != dateOfBirth) {
       setState(() {
         dateOfBirth = picked;

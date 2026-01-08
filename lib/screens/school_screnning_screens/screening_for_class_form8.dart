@@ -348,6 +348,54 @@ class _ScreeningForClassFormEightState
   }
 
   Future<void> _submitForm() async {
+    // At the top of your _submitForm method
+    String formatClassNameForStudentInfo(String className) {
+      final classMap = {
+        'firstclass': '1st',
+        'first class': '1st',
+        'first': '1st',
+        'secondclass': '2nd',
+        'second class': '2nd',
+        'second': '2nd',
+        'thirdclass': '3rd',
+        'third class': '3rd',
+        'third': '3rd',
+        'fourthclass': '4th',
+        'fourth class': '4th',
+        'fourth': '4th',
+        'fifthclass': '5th',
+        'fifth class': '5th',
+        'fifth': '5th',
+        'sixthclass': '6th',
+        'sixth class': '6th',
+        'sixth': '6th',
+        'seventhclass': '7th',
+        'seventh class': '7th',
+        'seventh': '7th',
+        'eighthclass': '8th',
+        'eighth class': '8th',
+        'eighth': '8th',
+        'ninthclass': '9th',
+        'ninth class': '9th',
+        'ninth': '9th',
+        'tenthclass': '10th',
+        'tenth class': '10th',
+        'tenth': '10th',
+        'eleventhclass': '11th',
+        'eleventh class': '11th',
+        'eleventh': '11th',
+        'twelfthclass': '12th',
+        'twelfth class': '12th',
+        'twelfth': '12th',
+      };
+
+      String normalized = className.toLowerCase().trim();
+      return classMap[normalized] ?? className;
+    }
+
+    String className = formatClassNameForStudentInfo(
+      widget.combinedData['ClassName']?.toString() ?? '',
+    );
     if (_doctorNameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -519,6 +567,7 @@ class _ScreeningForClassFormEightState
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         debugPrint("Response: ${response.body}");
+        debugPrint("Passing the data Classanme ${className}");
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -532,14 +581,12 @@ class _ScreeningForClassFormEightState
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (context) => StudentInfoScreen(
-                        className:
-                            widget.combinedData['ClassName'] ?? "FirstClass",
+                        className: className,
                         isSchool: true,
                         teamName: _doctorNameController.text.trim(),
-                        schoolId: widget.combinedData['SchoolId'] ?? 0,
-                        schoolName:
-                            widget.combinedData['SchoolName'] ?? 'Unknown',
-                        doctorId: widget.combinedData['DoctorId'] ?? 0,
+                        schoolId: widget.combinedData['SchoolId'],
+                        schoolName: widget.combinedData['SchoolName'],
+                        doctorId: widget.combinedData['DoctorId'],
                       ),
                     ),
                     (route) => false,
